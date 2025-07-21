@@ -278,15 +278,13 @@
               }
             }
 
-            // Draw detailed bucket
-            fill(150); // Base color
+            // Draw detailed gray bucket
+            fill(128); // Gray base color
             rect(bucketX - 25, height - 60, 50, 50, 10); // Main body
-            fill(200); // Rim
+            fill(160); // Lighter gray rim
             rect(bucketX - 25, height - 70, 50, 10, 5);
-            fill(100); // Handle
+            fill(100); // Dark gray handle
             arc(bucketX, height - 65, 20, 20, PI, 0);
-            fill(255, 255, 0); // Yellow interior
-            rect(bucketX - 20, height - 55, 40, 40, 5);
 
             // Move bucket
             if (keyIsDown(LEFT_ARROW)) bucketX -= 5;

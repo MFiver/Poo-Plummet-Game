@@ -34,7 +34,7 @@
     let animationTimer = 0;
     let particles = [];
     let userInteracted = false;
-    let moveDirection = null; // "left", "right", or null
+    let touchDirection = null; // "left", "right", or null
     let fartPlayed = false; // Track if fart sound has played for current level
     const fartSound = new Audio('https://cdn.pixabay.com/audio/2023/03/29/12-24-24-614_1.mp3');
     const splashSound = new Audio('https://cdn.pixabay.com/audio/2022/08/02/14-21-45-597_1.mp3');
@@ -66,16 +66,9 @@
       try {
         let canvas = createCanvas(400, 500);
         canvas.parent('gameCanvas');
+        canvas.elt.focus(); // Ensure canvas captures keyboard input
         loadHighScore();
         resetLevel();
-        canvas.elt.addEventListener('touchstart', handleTouchStart, false);
-        canvas.elt.addEventListener('touchmove', handleTouchMove, false);
-        canvas.elt.addEventListener('touchend', handleTouchEnd, false);
-        document.addEventListener('keydown', () => {
-          userInteracted = true;
-          playBackgroundMusic();
-          console.log('User interacted via keydown: audio enabled');
-        });
         document.addEventListener('click', () => {
           userInteracted = true;
           playBackgroundMusic();
@@ -87,34 +80,37 @@
       }
     }
 
-    function handleTouchStart(event) {
+    function keyPressed() {
+      if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
+        userInteracted = true;
+        playBackgroundMusic();
+        console.log('Key pressed: code=', keyCode, 'pooX=', pooX);
+      }
+    }
+
+    function touchStarted() {
       userInteracted = true;
       playBackgroundMusic();
-      if (event.touches.length > 0) {
-        let rect = canvas.elt.getBoundingClientRect();
-        let touchX = event.touches[0].clientX - rect.left;
-        moveDirection = touchX < 200 ? 'left' : 'right';
-        console.log('Touch started:', moveDirection, 'at x:', touchX, 'pooX:', pooX, 'canvas rect:', rect);
+      if (touches.length > 0) {
+        let touchX = touches[0].x;
+        touchDirection = touchX < 200 ? 'left' : 'right';
+        console.log('Touch started: direction=', touchDirection, 'touchX=', touchX, 'pooX=', pooX);
       }
-      event.preventDefault();
       return false;
     }
 
-    function handleTouchMove(event) {
-      if (event.touches.length > 0) {
-        let rect = canvas.elt.getBoundingClientRect();
-        let touchX = event.touches[0].clientX - rect.left;
-        moveDirection = touchX < 200 ? 'left' : 'right';
-        console.log('Touch moved:', moveDirection, 'at x:', touchX, 'pooX:', pooX, 'canvas rect:', rect);
+    function touchMoved() {
+      if (touches.length > 0) {
+        let touchX = touches[0].x;
+        touchDirection = touchX < 200 ? 'left' : 'right';
+        console.log('Touch moved: direction=', touchDirection, 'touchX=', touchX, 'pooX=', pooX);
       }
-      event.preventDefault();
       return false;
     }
 
-    function handleTouchEnd(event) {
-      moveDirection = null;
-      console.log('Touch ended, pooX:', pooX);
-      event.preventDefault();
+    function touchEnded() {
+      touchDirection = null;
+      console.log('Touch ended, pooX=', pooX);
       return false;
     }
 
@@ -201,10 +197,22 @@
             toiletX = constrain(toiletX, 50, width - 50);
           }
           pooX += windForce;
-          if (keyIsDown(LEFT_ARROW)) pooX -= 2;
-          if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (moveDirection === 'left') pooX -= 2; // Move left for left side press
-          if (moveDirection === 'right') pooX += 2; // Move right for right side press
+          if (keyIsDown(LEFT_ARROW)) {
+            pooX -= 2;
+            console.log('Left arrow pressed, pooX=', pooX);
+          }
+          if (keyIsDown(RIGHT_ARROW)) {
+            pooX += 2;
+            console.log('Right arrow pressed, pooX=', pooX);
+          }
+          if (touchDirection === 'left') {
+            pooX -= 2;
+            console.log('Touch left, pooX=', pooX);
+          }
+          if (touchDirection === 'right') {
+            pooX += 2;
+            console.log('Touch right, pooX=', pooX);
+          }
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

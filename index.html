@@ -186,8 +186,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (moveDirection === 'left') pooX -= 2; // Move left
-          if (moveDirection === 'right') pooX += 2; // Move right
+          if (moveDirection === 'left') pooX -= 2; // Move left for left side press
+          if (moveDirection === 'right') pooX += 2; // Move right for right side press
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

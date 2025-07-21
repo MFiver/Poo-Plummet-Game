@@ -33,52 +33,72 @@
     let showFailureAnimation = false;
     let animationTimer = 0;
     let particles = [];
+    let userInteracted = false;
     let touchDirection = null; // "left", "right", or null
+    const fartSound = new Audio('https://cdn.pixabay.com/audio/2023/03/29/12-24-24-614_1.mp3');
+    const splashSound = new Audio('https://cdn.pixabay.com/audio/2022/08/02/14-21-45-597_1.mp3');
+    const colors = [
+      [255, 0, 0], // Red
+      [0, 0, 255], // Blue
+      [0, 255, 0], // Green
+      [255, 255, 0] // Yellow
+    ];
+    let colorIndex = 0;
+
+    function preload() {
+      try {
+        fartSound.load();
+        splashSound.load();
+        console.log('Audio files preloaded');
+      } catch (e) {
+        console.error('Audio preload failed:', e);
+      }
+    }
 
     function setup() {
       try {
         let canvas = createCanvas(400, 500);
         canvas.parent('gameCanvas');
-        canvas.elt.focus(); // Ensure canvas captures keyboard input
-        canvas.elt.addEventListener('click', () => {
-          canvas.elt.focus();
-          console.log('Canvas clicked, focus set');
-        });
         loadHighScore();
         resetLevel();
+        canvas.touchStarted(handleTouchStart);
+        canvas.touchMoved(handleTouchMove);
+        canvas.touchEnded(handleTouchEnd);
+        document.addEventListener('keydown', () => {
+          userInteracted = true;
+          console.log('User interacted: audio enabled');
+        });
+        document.addEventListener('click', () => {
+          userInteracted = true;
+          console.log('User interacted: audio enabled');
+        });
         console.log('Game setup completed');
       } catch (e) {
         console.error('Setup failed:', e);
       }
     }
 
-    function keyPressed() {
-      if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW) {
-        console.log('Key pressed: code=', keyCode, 'pooX=', pooX);
-      }
-    }
-
-    function touchStarted() {
-      if (touches.length > 0) {
-        let touchX = touches[0].x;
-        touchDirection = touchX < 200 ? 'left' : 'right';
-        console.log('Touch started: direction=', touchDirection, 'touchX=', touchX, 'pooX=', pooX);
-      }
+    function handleTouchStart(event) {
+      userInteracted = true;
+      let touchX = touches.length > 0 ? touches[0].x : mouseX;
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch started:', touchDirection, 'at x:', touchX);
+      event.preventDefault();
       return false;
     }
 
-    function touchMoved() {
-      if (touches.length > 0) {
-        let touchX = touches[0].x;
-        touchDirection = touchX < 200 ? 'left' : 'right';
-        console.log('Touch moved: direction=', touchDirection, 'touchX=', touchX, 'pooX=', pooX);
-      }
+    function handleTouchMove(event) {
+      let touchX = touches.length > 0 ? touches[0].x : mouseX;
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch moved:', touchDirection, 'at x:', touchX);
+      event.preventDefault();
       return false;
     }
 
-    function touchEnded() {
+    function handleTouchEnd(event) {
       touchDirection = null;
-      console.log('Touch ended, pooX=', pooX);
+      console.log('Touch ended');
+      event.preventDefault();
       return false;
     }
 
@@ -128,6 +148,9 @@
       document.getElementById('feedback').textContent = '';
       document.getElementById('restartButton').classList.add('hidden');
       document.getElementById('level').textContent = `Level: ${level}`;
+      if (userInteracted) {
+        fartSound.play().catch(e => console.error('Fart sound failed:', e));
+      }
       console.log('Level reset:', level, 'Toilet speed:', toiletSpeed);
     }
 
@@ -157,22 +180,10 @@
             toiletX = constrain(toiletX, 50, width - 50);
           }
           pooX += windForce;
-          if (keyIsDown(LEFT_ARROW)) {
-            pooX -= 2;
-            console.log('Left arrow pressed, pooX=', pooX);
-          }
-          if (keyIsDown(RIGHT_ARROW)) {
-            pooX += 2;
-            console.log('Right arrow pressed, pooX=', pooX);
-          }
-          if (touchDirection === 'left') {
-            pooX -= 2;
-            console.log('Touch left, pooX=', pooX);
-          }
-          if (touchDirection === 'right') {
-            pooX += 2;
-            console.log('Touch right, pooX=', pooX);
-          }
+          if (keyIsDown(LEFT_ARROW)) pooX -= 2;
+          if (keyIsDown(RIGHT_ARROW)) pooX += 2;
+          if (touchDirection === 'left') pooX -= 2; // Fixed: Move left
+          if (touchDirection === 'right') pooX += 2; // Fixed: Move right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 
@@ -182,6 +193,9 @@
             if (pooX >= toiletX - toiletWidth / 2 && pooX <= toiletX + toiletWidth / 2) {
               feedback.textContent = `Success! On to Level ${level + 1}!`;
               feedback.classList.add('text-green-600');
+              if (userInteracted) {
+                splashSound.play().catch(e => console.error('Splash sound failed:', e));
+              }
               level++;
               resetLevel();
             } else {

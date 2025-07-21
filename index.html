@@ -34,7 +34,7 @@
     let animationTimer = 0;
     let particles = [];
     let userInteracted = false;
-    let touchDirection = null; // "left", "right", or null
+    let moveDirection = null; // "left", "right", or null
     const fartSound = new Audio('https://cdn.pixabay.com/audio/2023/03/29/12-24-24-614_1.mp3');
     const splashSound = new Audio('https://cdn.pixabay.com/audio/2022/08/02/14-21-45-597_1.mp3');
     const colors = [
@@ -61,9 +61,9 @@
         canvas.parent('gameCanvas');
         loadHighScore();
         resetLevel();
-        canvas.touchStarted(handleTouchStart);
-        canvas.touchMoved(handleTouchMove);
-        canvas.touchEnded(handleTouchEnd);
+        canvas.elt.addEventListener('touchstart', handleTouchStart, false);
+        canvas.elt.addEventListener('touchmove', handleTouchMove, false);
+        canvas.elt.addEventListener('touchend', handleTouchEnd, false);
         document.addEventListener('keydown', () => {
           userInteracted = true;
           console.log('User interacted: audio enabled');
@@ -80,23 +80,27 @@
 
     function handleTouchStart(event) {
       userInteracted = true;
-      let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'left' : 'right';
-      console.log('Touch started:', touchDirection, 'at x:', touchX, 'pooX:', pooX);
+      if (event.touches.length > 0) {
+        let touchX = event.touches[0].clientX - canvas.elt.getBoundingClientRect().left;
+        moveDirection = touchX < width / 2 ? 'left' : 'right';
+        console.log('Touch started:', moveDirection, 'at x:', touchX, 'pooX:', pooX);
+      }
       event.preventDefault();
       return false;
     }
 
     function handleTouchMove(event) {
-      let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'left' : 'right';
-      console.log('Touch moved:', touchDirection, 'at x:', touchX, 'pooX:', pooX);
+      if (event.touches.length > 0) {
+        let touchX = event.touches[0].clientX - canvas.elt.getBoundingClientRect().left;
+        moveDirection = touchX < width / 2 ? 'left' : 'right';
+        console.log('Touch moved:', moveDirection, 'at x:', touchX, 'pooX:', pooX);
+      }
       event.preventDefault();
       return false;
     }
 
     function handleTouchEnd(event) {
-      touchDirection = null;
+      moveDirection = null;
       console.log('Touch ended, pooX:', pooX);
       event.preventDefault();
       return false;
@@ -182,8 +186,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (touchDirection === 'left') pooX -= 2; // Move left
-          if (touchDirection === 'right') pooX += 2; // Move right
+          if (moveDirection === 'left') pooX -= 2; // Move left
+          if (moveDirection === 'right') pooX += 2; // Move right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

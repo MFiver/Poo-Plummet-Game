@@ -220,7 +220,7 @@
           if (bonusPhase === 1) {
             if (bonusTimer <= 0) {
               bonusGameActive = false;
-              level = 10;
+              level = 6;
               resetLevel();
               return;
             }
@@ -324,7 +324,7 @@
               if (userInteracted) {
                 splashSound.play().catch(e => console.error('Splash sound failed:', e));
               }
-              if (level === 9) {
+              if (level === 5) {
                 startBonusGame();
               } else {
                 level++;

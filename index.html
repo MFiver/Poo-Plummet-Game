@@ -61,9 +61,6 @@
         canvas.parent('gameCanvas');
         loadHighScore();
         resetLevel();
-        canvas.elt.addEventListener('touchstart', handleTouchStart, false);
-        canvas.elt.addEventListener('touchmove', handleTouchMove, false);
-        canvas.elt.addEventListener('touchend', handleTouchEnd, false);
         document.addEventListener('keydown', () => {
           userInteracted = true;
           console.log('User interacted: audio enabled');
@@ -78,31 +75,28 @@
       }
     }
 
-    function handleTouchStart(event) {
+    function touchStarted() {
       userInteracted = true;
-      if (event.touches.length > 0) {
-        let touchX = event.touches[0].clientX - canvas.elt.getBoundingClientRect().left;
+      if (touches.length > 0) {
+        let touchX = touches[0].x;
         moveDirection = touchX < width / 2 ? 'left' : 'right';
         console.log('Touch started:', moveDirection, 'at x:', touchX, 'pooX:', pooX);
       }
-      event.preventDefault();
       return false;
     }
 
-    function handleTouchMove(event) {
-      if (event.touches.length > 0) {
-        let touchX = event.touches[0].clientX - canvas.elt.getBoundingClientRect().left;
+    function touchMoved() {
+      if (touches.length > 0) {
+        let touchX = touches[0].x;
         moveDirection = touchX < width / 2 ? 'left' : 'right';
         console.log('Touch moved:', moveDirection, 'at x:', touchX, 'pooX:', pooX);
       }
-      event.preventDefault();
       return false;
     }
 
-    function handleTouchEnd(event) {
+    function touchEnded() {
       moveDirection = null;
       console.log('Touch ended, pooX:', pooX);
-      event.preventDefault();
       return false;
     }
 
@@ -186,8 +180,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (moveDirection === 'left') pooX -= 2; // Move left for left side press
-          if (moveDirection === 'right') pooX += 2; // Move right for right side press
+          if (moveDirection === 'left') pooX -= 2; // Move left
+          if (moveDirection === 'right') pooX += 2; // Move right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

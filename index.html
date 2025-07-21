@@ -81,23 +81,23 @@
     function handleTouchStart(event) {
       userInteracted = true;
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'right' : 'left'; // Swapped
-      console.log('Touch started:', touchDirection, 'at x:', touchX);
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch started:', touchDirection, 'at x:', touchX, 'pooX:', pooX);
       event.preventDefault();
       return false;
     }
 
     function handleTouchMove(event) {
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'right' : 'left'; // Swapped
-      console.log('Touch moved:', touchDirection, 'at x:', touchX);
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch moved:', touchDirection, 'at x:', touchX, 'pooX:', pooX);
       event.preventDefault();
       return false;
     }
 
     function handleTouchEnd(event) {
       touchDirection = null;
-      console.log('Touch ended');
+      console.log('Touch ended, pooX:', pooX);
       event.preventDefault();
       return false;
     }
@@ -182,8 +182,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (touchDirection = 'left') pooX -= 2; // Moves left
-          if (touchDirection = 'right') pooX += 2; // Moves right
+          if (touchDirection === 'left') pooX -= 2; // Move left
+          if (touchDirection === 'right') pooX += 2; // Move right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

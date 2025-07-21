@@ -7,9 +7,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    * { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     body { margin: 0; padding: 0; box-sizing: border-box; }
-    .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; user-select: none; -webkit-user-select: none; }
-    #gameCanvas { display: block; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
+    .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; }
+    #gameCanvas { display: block; margin: 0 auto; touch-action: none; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -17,7 +18,7 @@
     <div class="bg-amber-900 text-white text-2xl sm:text-3xl md:text-4xl font-bold py-2">POO PLUMMET</div>
     <p id="level" class="my-1 text-sm sm:text-base">Level: 1</p>
     <p id="highScore" class="my-1 text-sm sm:text-base">High Score: None</p>
-    <div id="gameCanvas" class="mt-2"></div>
+    <div id="gameCanvas" class="mt-2" onselectstart="return false;"></div>
     <p id="feedback" class="mt-2 text-base sm:text-lg"></p>
     <button id="restartButton" onclick="restartGame()" class="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 hidden">Play Again</button>
   </div>

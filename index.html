@@ -7,7 +7,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    body { margin: 0; padding: 0; }
+    body { margin: 0; padding: 0; box-sizing: border-box; }
     .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; }
     #gameCanvas { display: block; margin: 0 auto; touch-action: none; }
   </style>
@@ -33,6 +33,7 @@
     let animationTimer = 0;
     let particles = [];
     let userInteracted = false;
+    let touchDirection = null; // "left", "right", or null
     const fartSound = new Audio('https://cdn.pixabay.com/audio/2023/03/29/12-24-24-614_1.mp3');
     const splashSound = new Audio('https://cdn.pixabay.com/audio/2022/08/02/14-21-45-597_1.mp3');
     const colors = [
@@ -61,6 +62,7 @@
         resetLevel();
         canvas.touchStarted(handleTouchStart);
         canvas.touchMoved(handleTouchMove);
+        canvas.touchEnded(handleTouchEnd);
         document.addEventListener('keydown', () => {
           userInteracted = true;
           console.log('User interacted: audio enabled');
@@ -77,20 +79,22 @@
 
     function handleTouchStart() {
       userInteracted = true;
-      console.log('Touch started');
+      let touchX = touches.length > 0 ? touches[0].x : mouseX;
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch started:', touchDirection, 'at x:', touchX);
       return false;
     }
 
     function handleTouchMove() {
-      if (!gameOver) {
-        let touchX = touches.length > 0 ? touches[0].x : mouseX;
-        if (touchX < width / 2) {
-          pooX -= 2;
-        } else {
-          pooX += 2;
-        }
-        console.log('Touch move at x:', touchX);
-      }
+      let touchX = touches.length > 0 ? touches[0].x : mouseX;
+      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      console.log('Touch moved:', touchDirection, 'at x:', touchX);
+      return false;
+    }
+
+    function handleTouchEnd() {
+      touchDirection = null;
+      console.log('Touch ended');
       return false;
     }
 
@@ -174,6 +178,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
+          if (touchDirection === 'left') pooX -= 2;
+          if (touchDirection === 'right') pooX += 2;
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

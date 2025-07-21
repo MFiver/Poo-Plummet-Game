@@ -8,8 +8,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { margin: 0; padding: 0; box-sizing: border-box; }
-    .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; }
-    #gameCanvas { display: block; margin: 0 auto; touch-action: none; }
+    .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; user-select: none; -webkit-user-select: none; }
+    #gameCanvas { display: block; margin: 0 auto; touch-action: none; user-select: none; -webkit-user-select: none; }
   </style>
 </head>
 <body class="bg-gray-100">
@@ -77,24 +77,27 @@
       }
     }
 
-    function handleTouchStart() {
+    function handleTouchStart(event) {
       userInteracted = true;
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
       touchDirection = touchX < width / 2 ? 'left' : 'right';
       console.log('Touch started:', touchDirection, 'at x:', touchX);
+      event.preventDefault();
       return false;
     }
 
-    function handleTouchMove() {
+    function handleTouchMove(event) {
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
       touchDirection = touchX < width / 2 ? 'left' : 'right';
       console.log('Touch moved:', touchDirection, 'at x:', touchX);
+      event.preventDefault();
       return false;
     }
 
-    function handleTouchEnd() {
+    function handleTouchEnd(event) {
       touchDirection = null;
       console.log('Touch ended');
+      event.preventDefault();
       return false;
     }
 
@@ -178,8 +181,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (touchDirection === 'left') pooX -= 2;
-          if (touchDirection === 'right') pooX += 2;
+          if (touchDirection === 'left') pooX -= 2; // Fixed: Move left
+          if (touchDirection === 'right') pooX += 2; // Fixed: Move right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 

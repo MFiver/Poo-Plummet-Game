@@ -15,7 +15,9 @@
 </head>
 <body class="bg-gray-100">
   <div class="game-container">
-    <div class="bg-amber-900 text-white text-2xl sm:text-3xl md:text-4xl font-bold py-2">POO PLUMMET</div>
+    <div style="background-color: #8B4513; text-align: center; padding: 10px 0;">
+      <h1 style="font-size: 2.5em; font-weight: bold; color: white; font-family: Arial; text-shadow: 2px 2px 4px #000000; -webkit-text-stroke: 1px #654321;">POO PLUMMET</h1>
+    </div>
     <p id="level" class="my-1 text-sm sm:text-base">Level: 1</p>
     <p id="highScore" class="my-1 text-sm sm:text-base">High Score: None</p>
     <div id="gameCanvas" class="mt-2" onselectstart="return false;"></div>
@@ -44,6 +46,15 @@
       [255, 255, 0] // Yellow
     ];
     let colorIndex = 0;
+
+    // Bonus game variables
+    let bonusGameActive = false;
+    let bonusPhase = 0; // 0: Bonus Round text, 1: Barf Bucket game
+    let bucketX;
+    let mouthX, mouthSpeed;
+    let vomit = [];
+    let bonusTimer = 0;
+    let bonusScore = 0;
 
     function preload() {
       try {
@@ -156,8 +167,21 @@
 
     function restartGame() {
       level = 1;
+      bonusGameActive = false;
+      bonusPhase = 0;
       resetLevel();
       console.log('Game restarted');
+    }
+
+    function startBonusGame() {
+      bonusGameActive = true;
+      bonusPhase = 0;
+      bonusTimer = 120; // 2 seconds at 60 FPS for Bonus Round text
+      bucketX = width / 2;
+      mouthX = width / 2;
+      mouthSpeed = 5;
+      vomit = [];
+      bonusScore = 0;
     }
 
     function draw() {
@@ -172,7 +196,111 @@
         }
         noStroke();
 
-        if (!gameOver) {
+        if (bonusGameActive) {
+          background(0);
+          bonusTimer--;
+
+          if (bonusPhase === 0) {
+            if (bonusTimer <= 0) {
+              bonusPhase = 1;
+              bonusTimer = 10 * 60; // 10 seconds for Barf Bucket game
+            } else {
+              animationTimer++;
+              let scale = 1 + 0.5 * sin(animationTimer * 0.1);
+              textAlign(CENTER);
+              textSize(48 * scale);
+              textStyle(BOLD);
+              fill(random(255), random(255), random(255));
+              text("BONUS ROUND!", width / 2, height / 2 - 20);
+              text("BARF BUCKET!", width / 2, height / 2 + 20);
+              return;
+            }
+          }
+
+          if (bonusPhase === 1) {
+            if (bonusTimer <= 0) {
+              bonusGameActive = false;
+              level = 10;
+              resetLevel();
+              return;
+            }
+
+            // Move mouth
+            mouthX += mouthSpeed;
+            if (mouthX > width + 50 || mouthX < -50) mouthSpeed *= -1;
+            mouthX = constrain(mouthX, -50, width + 50);
+
+            // Draw improved vomiting face (sideways with realistic eyes)
+            push();
+            translate(mouthX, 100);
+            rotate(PI / 2); // Rotate to sideways
+            fill(255, 182, 193); // Skin color
+            ellipse(0, 0, 100, 50); // Face
+            fill(255); // Larger white sclera
+            ellipse(-20, -10, 25, 20); // Left eyeball
+            ellipse(20, -10, 25, 20); // Right eyeball
+            fill(0, 0, 255); // Blue irises
+            ellipse(-20, -10, 15, 12); // Left iris
+            ellipse(20, -10, 15, 12); // Right iris
+            fill(0); // Black pupils
+            ellipse(-20, -10, 5, 5); // Left pupil
+            ellipse(20, -10, 5, 5); // Right pupil
+            fill(139, 69, 19); // Nose
+            triangle(0, -5, -5, 5, 5, 5); // Simple nose
+            fill(255, 0, 0); // Mouth
+            arc(0, 20, 40, 30, 0, PI, CHORD); // Open mouth
+            fill(255); // Teeth
+            rect(-15, 20, 5, 10); // Left tooth
+            rect(-5, 20, 5, 10); // Middle tooth
+            rect(5, 20, 5, 10); // Right tooth
+            pop();
+
+            // Generate detailed green vomit with varying sizes
+            if (frameCount % 8 === 0) {
+              let size = random(5, 20); // Small to large chunks
+              vomit.push({ x: mouthX, y: 125, speed: 5, size: size });
+            }
+
+            // Update and draw detailed green vomit
+            for (let i = vomit.length - 1; i >= 0; i--) {
+              let v = vomit[i];
+              v.y += v.speed;
+              fill(0, 255, 0); // Green color
+              beginShape();
+              vertex(v.x - v.size / 2, v.y);
+              bezier(v.x - v.size / 2, v.y, v.x - v.size / 3, v.y + v.size / 4, v.x + v.size / 3, v.y + v.size / 4, v.x + v.size / 2, v.y);
+              vertex(v.x + v.size / 2, v.y - v.size / 4);
+              endShape(CLOSE);
+              if (v.y > height) vomit.splice(i, 1);
+              else if (v.y > height - 60 && v.x > bucketX - 25 && v.x < bucketX + 25) {
+                vomit.splice(i, 1);
+                bonusScore++;
+              }
+            }
+
+            // Draw detailed bucket
+            fill(150); // Base color
+            rect(bucketX - 25, height - 60, 50, 50, 10); // Main body
+            fill(200); // Rim
+            rect(bucketX - 25, height - 70, 50, 10, 5);
+            fill(100); // Handle
+            arc(bucketX, height - 65, 20, 20, PI, 0);
+            fill(255, 255, 0); // Yellow interior
+            rect(bucketX - 20, height - 55, 40, 40, 5);
+
+            // Move bucket
+            if (keyIsDown(LEFT_ARROW)) bucketX -= 5;
+            if (keyIsDown(RIGHT_ARROW)) bucketX += 5;
+            if (touchDirection === 'left') bucketX -= 5;
+            if (touchDirection === 'right') bucketX += 5;
+            bucketX = constrain(bucketX, 25, width - 25);
+
+            fill(255);
+            textSize(20);
+            text(`Time: ${Math.floor(bonusTimer / 60)}s`, width / 2, 30);
+            text(`Score: ${bonusScore}`, width / 2, 60);
+          }
+        } else if (!gameOver) {
           let windRange = level >= 10 ? 1.5 + (Math.min(level, 15) - 10) * 0.75 : 1.5 + (level - 1) * 0.75;
           windForce = random(-windRange, windRange);
           if (level >= 10) {
@@ -182,8 +310,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (touchDirection === 'left') pooX -= 2; // Fixed: Move left
-          if (touchDirection === 'right') pooX += 2; // Fixed: Move right
+          if (touchDirection === 'left') pooX -= 2;
+          if (touchDirection === 'right') pooX += 2;
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 
@@ -196,17 +324,19 @@
               if (userInteracted) {
                 splashSound.play().catch(e => console.error('Splash sound failed:', e));
               }
-              level++;
-              resetLevel();
+              if (level === 9) {
+                startBonusGame();
+              } else {
+                level++;
+                resetLevel();
+              }
             } else {
               feedback.textContent = `Missed! Game Over at Level ${level}.`;
               feedback.classList.add('text-red-600');
               showFailureAnimation = true;
               createParticles();
-              console.log('Checking high score: current level', level, 'vs high score', highScore.score);
               if (level - 1 > highScore.score) {
                 let name = window.prompt('New High Score! Enter your name:', 'Player');
-                console.log('Prompt result:', name);
                 if (name !== null) {
                   highScore = { name: name.trim() || 'Anonymous', score: level - 1 };
                   saveHighScore();
@@ -259,45 +389,47 @@
           if (animationTimer > 120) showFailureAnimation = false;
         }
 
-        let tileSize = 10;
-        for (let x = 0; x < width; x += tileSize) {
-          for (let y = height - 20; y < height; y += tileSize) {
-            fill((x / tileSize + y / tileSize) % 2 === 0 ? 255 : 0);
-            rect(x, y, tileSize, tileSize);
+        if (!bonusGameActive) {
+          let tileSize = 10;
+          for (let x = 0; x < width; x += tileSize) {
+            for (let y = height - 20; y < height; y += tileSize) {
+              fill((x / tileSize + y / tileSize) % 2 === 0 ? 255 : 0);
+              rect(x, y, tileSize, tileSize);
+            }
           }
+
+          fill(255);
+          rect(toiletX - 30, height - 120, 60, 60);
+          arc(toiletX, height - 60, 60, 45, PI, 0);
+          arc(toiletX, height - 60, 60, 45, 0, PI);
+          stroke(200);
+          strokeWeight(3);
+          noFill();
+          arc(toiletX, height - 60, 66, 51, PI, 0);
+          noStroke();
+          fill(0, 191, 255);
+          ellipse(toiletX, height - 60, 45, 22.5);
+
+          fill(139, 69, 19);
+          beginShape();
+          vertex(pooX - 7.5, pooY - 15);
+          vertex(pooX + 7.5, pooY - 12);
+          vertex(pooX + 10.5, pooY);
+          vertex(pooX + 7.5, pooY + 12);
+          vertex(pooX - 7.5, pooY + 15);
+          vertex(pooX - 10.5, pooY + 3);
+          endShape(CLOSE);
+
+          fill(255, 218, 185);
+          arc(width / 2 - 40, 0, 80, 80, 0, PI);
+          arc(width / 2 + 40, 0, 80, 80, 0, PI);
+          noStroke();
+
+          fill(255);
+          textAlign(CENTER);
+          textSize(14);
+          text(`Fart Wind: ${windForce.toFixed(2)}`, width / 2, 80);
         }
-
-        fill(255);
-        rect(toiletX - 30, height - 120, 60, 60);
-        arc(toiletX, height - 60, 60, 45, PI, 0);
-        arc(toiletX, height - 60, 60, 45, 0, PI);
-        stroke(200);
-        strokeWeight(3);
-        noFill();
-        arc(toiletX, height - 60, 66, 51, PI, 0);
-        noStroke();
-        fill(0, 191, 255);
-        ellipse(toiletX, height - 60, 45, 22.5);
-
-        fill(139, 69, 19);
-        beginShape();
-        vertex(pooX - 7.5, pooY - 15);
-        vertex(pooX + 7.5, pooY - 12);
-        vertex(pooX + 10.5, pooY);
-        vertex(pooX + 7.5, pooY + 12);
-        vertex(pooX - 7.5, pooY + 15);
-        vertex(pooX - 10.5, pooY + 3);
-        endShape(CLOSE);
-
-        fill(255, 218, 185);
-        arc(width / 2 - 40, 0, 80, 80, 0, PI);
-        arc(width / 2 + 40, 0, 80, 80, 0, PI);
-        noStroke();
-
-        fill(255);
-        textAlign(CENTER);
-        textSize(14);
-        text(`Fart Wind: ${windForce.toFixed(2)}`, width / 2, 80);
       } catch (e) {
         console.error('Draw failed:', e);
       }

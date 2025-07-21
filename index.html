@@ -35,10 +35,8 @@
     let particles = [];
     let userInteracted = false;
     let moveDirection = null; // "left", "right", or null
-    let fartPlayed = false; // Track if fart sound has played for current level
     const fartSound = new Audio('https://cdn.pixabay.com/audio/2023/03/29/12-24-24-614_1.mp3');
     const splashSound = new Audio('https://cdn.pixabay.com/audio/2022/08/02/14-21-45-597_1.mp3');
-    const backgroundMusic = new Audio('https://cdn.pixabay.com/audio/2022/03/28/01-40-28-915_1.mp3');
     const colors = [
       [255, 0, 0], // Red
       [0, 0, 255], // Blue
@@ -50,12 +48,7 @@
     function preload() {
       try {
         fartSound.load();
-        fartSound.volume = 0.5;
         splashSound.load();
-        splashSound.volume = 0.5;
-        backgroundMusic.load();
-        backgroundMusic.loop = true;
-        backgroundMusic.volume = 0.3;
         console.log('Audio files preloaded');
       } catch (e) {
         console.error('Audio preload failed:', e);
@@ -73,13 +66,11 @@
         canvas.elt.addEventListener('touchend', handleTouchEnd, false);
         document.addEventListener('keydown', () => {
           userInteracted = true;
-          playBackgroundMusic();
-          console.log('User interacted via keydown: audio enabled');
+          console.log('User interacted: audio enabled');
         });
         document.addEventListener('click', () => {
           userInteracted = true;
-          playBackgroundMusic();
-          console.log('User interacted via click: audio enabled');
+          console.log('User interacted: audio enabled');
         });
         console.log('Game setup completed');
       } catch (e) {
@@ -89,7 +80,6 @@
 
     function handleTouchStart(event) {
       userInteracted = true;
-      playBackgroundMusic();
       if (event.touches.length > 0) {
         let touchX = event.touches[0].clientX - canvas.elt.getBoundingClientRect().left;
         moveDirection = touchX < 200 ? 'left' : 'right';
@@ -114,12 +104,6 @@
       console.log('Touch ended, pooX:', pooX);
       event.preventDefault();
       return false;
-    }
-
-    function playBackgroundMusic() {
-      if (userInteracted && !gameOver && backgroundMusic.paused) {
-        backgroundMusic.play().catch(e => console.error('Background music failed:', e));
-      }
     }
 
     function loadHighScore() {
@@ -165,17 +149,18 @@
       showFailureAnimation = false;
       animationTimer = 0;
       particles = [];
-      fartPlayed = false;
       document.getElementById('feedback').textContent = '';
       document.getElementById('restartButton').classList.add('hidden');
       document.getElementById('level').textContent = `Level: ${level}`;
+      if (userInteracted) {
+        fartSound.play().catch(e => console.error('Fart sound failed:', e));
+      }
       console.log('Level reset:', level, 'Toilet speed:', toiletSpeed);
     }
 
     function restartGame() {
       level = 1;
       resetLevel();
-      playBackgroundMusic();
       console.log('Game restarted');
     }
 
@@ -206,14 +191,8 @@
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 
-          if (!fartPlayed && pooY < 60 && userInteracted) {
-            fartSound.play().catch(e => console.error('Fart sound failed:', e));
-            fartPlayed = true;
-          }
-
           if (pooY >= height - 45) {
             gameOver = true;
-            backgroundMusic.pause();
             let feedback = document.getElementById('feedback');
             if (pooX >= toiletX - toiletWidth / 2 && pooX <= toiletX + toiletWidth / 2) {
               feedback.textContent = `Success! On to Level ${level + 1}!`;
@@ -223,7 +202,6 @@
               }
               level++;
               resetLevel();
-              playBackgroundMusic();
             } else {
               feedback.textContent = `Missed! Game Over at Level ${level}.`;
               feedback.classList.add('text-red-600');

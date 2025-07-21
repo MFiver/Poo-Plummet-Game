@@ -6,14 +6,18 @@
   <title>Poo Plummet</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.2/p5.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    .game-container { display: block; margin: 0 auto; text-align: center; width: 400px; }
+    #gameCanvas { display: block; margin: 0 auto; touch-action: none; }
+  </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen max-h-screen">
-  <div class="text-center sm:text-sm md:text-base">
+<body class="bg-gray-100">
+  <div class="game-container">
     <div class="bg-amber-900 text-white text-2xl sm:text-3xl md:text-4xl font-bold py-2">POO PLUMMET</div>
-    <p class="my-1">Use left/right arrow keys or tap left/right side to guide the poo into the toilet!</p>
-    <p id="level" class="my-1">Level: 1</p>
-    <p id="highScore" class="my-1">High Score: None</p>
-    <div id="gameCanvas" class="mt-2" style="border: none;"></div>
+    <p id="level" class="my-1 text-sm sm:text-base">Level: 1</p>
+    <p id="highScore" class="my-1 text-sm sm:text-base">High Score: None</p>
+    <div id="gameCanvas" class="mt-2"></div>
     <p id="feedback" class="mt-2 text-base sm:text-lg"></p>
     <button id="restartButton" onclick="restartGame()" class="mt-2 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 hidden">Play Again</button>
   </div>
@@ -55,7 +59,8 @@
         canvas.parent('gameCanvas');
         loadHighScore();
         resetLevel();
-        canvas.touchStarted(handleTouch);
+        canvas.touchStarted(handleTouchStart);
+        canvas.touchMoved(handleTouchMove);
         document.addEventListener('keydown', () => {
           userInteracted = true;
           console.log('User interacted: audio enabled');
@@ -70,17 +75,23 @@
       }
     }
 
-    function handleTouch() {
+    function handleTouchStart() {
+      userInteracted = true;
+      console.log('Touch started');
+      return false;
+    }
+
+    function handleTouchMove() {
       if (!gameOver) {
-        let touchX = mouseX; // p5.js maps touch to mouseX
+        let touchX = touches.length > 0 ? touches[0].x : mouseX;
         if (touchX < width / 2) {
-          pooX -= 2; // Move left
+          pooX -= 2;
         } else {
-          pooX += 2; // Move right
+          pooX += 2;
         }
-        userInteracted = true;
-        console.log('Touch detected at x:', touchX);
+        console.log('Touch move at x:', touchX);
       }
+      return false;
     }
 
     function loadHighScore() {
@@ -120,7 +131,7 @@
       toiletBaseX = random(50, width - 50);
       toiletX = toiletBaseX;
       toiletWidth = 45;
-      toiletSpeed = level >= 10 ? 0.02 + (level - 10) * 0.01 : 0; // Increase speed from level 10-15
+      toiletSpeed = level >= 10 ? 0.02 + (Math.min(level, 15) - 10) * 0.01 : 0;
       gameOver = false;
       showHighScoreAnimation = false;
       showFailureAnimation = false;
@@ -143,7 +154,6 @@
 
     function draw() {
       try {
-        // Strobe background from level 20
         if (level >= 20) {
           if (frameCount % 10 === 0) {
             colorIndex = (colorIndex + 1) % colors.length;
@@ -155,24 +165,18 @@
         noStroke();
 
         if (!gameOver) {
-          // Update wind
           let windRange = level >= 10 ? 1.5 + (Math.min(level, 15) - 10) * 0.75 : 1.5 + (level - 1) * 0.75;
           windForce = random(-windRange, windRange);
-
-          // Update toilet position (from level 10)
           if (level >= 10) {
-            toiletX = toiletBaseX + sin(frameCount * toiletSpeed) * 50; // Oscillate ±50 pixels
+            toiletX = toiletBaseX + sin(frameCount * toiletSpeed) * 50;
             toiletX = constrain(toiletX, 50, width - 50);
           }
-
-          // Update poo position
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 
-          // Check if poo hits ground
           if (pooY >= height - 45) {
             gameOver = true;
             let feedback = document.getElementById('feedback');
@@ -205,7 +209,6 @@
           }
         }
 
-        // Draw high score animation
         if (showHighScoreAnimation) {
           animationTimer++;
           let scale = 1 + 0.5 * sin(animationTimer * 0.1);
@@ -226,7 +229,6 @@
           if (animationTimer > 120) showHighScoreAnimation = false;
         }
 
-        // Draw failure animation
         if (showFailureAnimation) {
           animationTimer++;
           let scale = 1 + 0.5 * sin(animationTimer * 0.1);
@@ -247,7 +249,6 @@
           if (animationTimer > 120) showFailureAnimation = false;
         }
 
-        // Draw checkered floor
         let tileSize = 10;
         for (let x = 0; x < width; x += tileSize) {
           for (let y = height - 20; y < height; y += tileSize) {
@@ -256,7 +257,6 @@
           }
         }
 
-        // Draw toilet
         fill(255);
         rect(toiletX - 30, height - 120, 60, 60);
         arc(toiletX, height - 60, 60, 45, PI, 0);
@@ -269,7 +269,6 @@
         fill(0, 191, 255);
         ellipse(toiletX, height - 60, 45, 22.5);
 
-        // Draw poo
         fill(139, 69, 19);
         beginShape();
         vertex(pooX - 7.5, pooY - 15);
@@ -280,13 +279,11 @@
         vertex(pooX - 10.5, pooY + 3);
         endShape(CLOSE);
 
-        // Draw butt
         fill(255, 218, 185);
         arc(width / 2 - 40, 0, 80, 80, 0, PI);
         arc(width / 2 + 40, 0, 80, 80, 0, PI);
         noStroke();
 
-        // Draw wind indicator
         fill(255);
         textAlign(CENTER);
         textSize(14);

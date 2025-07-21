@@ -81,7 +81,7 @@
     function handleTouchStart(event) {
       userInteracted = true;
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      touchDirection = touchX < width / 2 ? 'right' : 'left'; // Swapped
       console.log('Touch started:', touchDirection, 'at x:', touchX);
       event.preventDefault();
       return false;
@@ -89,7 +89,7 @@
 
     function handleTouchMove(event) {
       let touchX = touches.length > 0 ? touches[0].x : mouseX;
-      touchDirection = touchX < width / 2 ? 'left' : 'right';
+      touchDirection = touchX < width / 2 ? 'right' : 'left'; // Swapped
       console.log('Touch moved:', touchDirection, 'at x:', touchX);
       event.preventDefault();
       return false;
@@ -182,8 +182,8 @@
           pooX += windForce;
           if (keyIsDown(LEFT_ARROW)) pooX -= 2;
           if (keyIsDown(RIGHT_ARROW)) pooX += 2;
-          if (touchDirection === 'left') pooX -= 2; // Fixed: Move left
-          if (touchDirection === 'right') pooX += 2; // Fixed: Move right
+          if (touchDirection = 'left') pooX -= 2; // Moves left
+          if (touchDirection = 'right') pooX += 2; // Moves right
           pooY += pooSpeed;
           pooX = constrain(pooX, 0, width);
 
